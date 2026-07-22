@@ -24,7 +24,11 @@ const TOPIC_TO_SKILLS: Record<Topic, string[]> = {
   Sales: ["Negotiation", "Lead Generation", "Closing Deals"],
   "Project Management": ["Agile", "Scrum", "Risk Management"],
   Cybersecurity: ["Network Security", "Threat Analysis", "Incident Response"],
-  "Data Analysis": ["Data Visualization", "Statistical Analysis", "Data Cleaning"],
+  "Data Analysis": [
+    "Data Visualization",
+    "Statistical Analysis",
+    "Data Cleaning",
+  ],
   HR: ["Recruitment", "Employee Engagement", "Performance Management"],
 };
 
@@ -135,6 +139,33 @@ export function generateCourses(count: number): Course[] {
   return courses;
 }
 
+type CourseSkill = {
+  courseId: number;
+  skill: string;
+};
+
+export function generateCourseSkills(courses: Course[]): CourseSkill[] {
+  const courseSkills: CourseSkill[] = [];
+
+  for (const course of courses) {
+    const skills = TOPIC_TO_SKILLS[course.topic] || [];
+
+    const selected = faker.helpers.arrayElements(skills, {
+      min: 1,
+      max: skills.length,
+    });
+
+    for (const skill of selected) {
+      courseSkills.push({
+        courseId: course.id!,
+        skill,
+      });
+    }
+  }
+
+  return courseSkills;
+}
+
 export function generateSurveyResponse(userId: number) {
   const preferredTopic = faker.helpers.arrayElement(TOPICS);
 
@@ -142,9 +173,7 @@ export function generateSurveyResponse(userId: number) {
     userId: userId,
     skillGap: faker.helpers.arrayElement(SKILLS),
     goal: `Improve ${preferredTopic}`,
-    preferredTopic: faker.helpers.arrayElement(
-      TOPIC_TO_SKILLS[preferredTopic] || [],
-    ),
+    preferredTopic,
     confidence: faker.number.int({
       min: 1,
       max: 5,

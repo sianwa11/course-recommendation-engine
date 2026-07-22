@@ -5,6 +5,7 @@ import {
   generateSurveyResponse,
   generateUsageEvents,
   generateCoursePrerequisites,
+  generateCourseSkills,
 } from "../generators/generateData";
 import { faker } from "@faker-js/faker";
 
@@ -42,6 +43,15 @@ async function seed() {
         [course.title, course.topic, course.level, course.duration],
       );
       courseIds.push(result.rows[0].id);
+    }
+
+    // seed course skills
+    const courseSkills = generateCourseSkills(courses);
+    for (const courseSkill of courseSkills) {
+      await db.query(
+        "INSERT INTO course_skills (course_id, skill) VALUES ($1, $2)",
+        [courseSkill.courseId, courseSkill.skill],
+      );
     }
 
     // seed survey responses for each user
