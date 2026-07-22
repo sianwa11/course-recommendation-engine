@@ -18,3 +18,14 @@ export async function getUserById(userId: number): Promise<User> {
 
   return result.rows[0] as User;
 }
+
+export async function getAllUsers(): Promise<User[]> {
+  const result = await db.query(`
+    SELECT *
+    FROM users
+    ORDER BY id
+    LIMIT 50
+  `);
+
+  return result.rows as User[];
+}
