@@ -1,3 +1,10 @@
+DROP TABLE IF EXISTS usage_events;
+DROP TABLE IF EXISTS survey_responses;
+DROP TABLE IF EXISTS course_prerequisites;
+DROP TABLE IF EXISTS course_skills;
+DROP TABLE IF EXISTS courses;
+DROP TABLE IF EXISTS users;
+
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     role TEXT NOT NULL,
