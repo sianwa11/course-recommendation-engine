@@ -2,12 +2,12 @@
   "name": "course-recommendation-engine",
   "version": "1.0.0",
   "description": "",
-  "type": "module",
-  "main": "dist/index.js",
+  "type": "commonjs",
+  "main": "dist/src/app.js",
   "scripts": {
     "build": "tsc",
-    "dev": "tsx src/index.ts",
-    "start": "node dist/index.js",
+    "dev": "tsx src/app.ts",
+    "start": "node dist/src/app.js",
     "seed": "tsx db/seed.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

@@ -1,13 +1,13 @@
-import { getUserById, User } from "../models/users";
-import { getSurveyByUserId, Survey } from "../models/surveys";
-import { getUsageByUserId, Usage } from "../models/usage";
+import { getUserById, User } from "../models/users.js";
+import { getSurveyByUserId, Survey } from "../models/surveys.js";
+import { getUsageByUserId, Usage } from "../models/usage.js";
 import {
   Course,
   getAllCourses,
   getCourseSkills,
   getCoursePrerequisites,
   CoursePrerequisite,
-} from "../models/courses";
+} from "../models/courses.js";
 
 export async function getRecommendations(
   userId: number,
@@ -45,7 +45,7 @@ export async function getRecommendations(
 interface Score {
   course: Course;
   score: number;
-  reason: string;
+  reason: string[];
 }
 
 function scoreCourse(
@@ -129,18 +129,9 @@ function scoreCourse(
 
   if (score === null) return null;
 
-  const reason =
-    reasonParts.length > 0
-      ? `${reasonParts.join(" , ")}.`
-      : `A general suggestion based on your profile.`;
-
   return {
     course,
     score,
-    reason,
+    reason: reasonParts,
   };
 }
-
-const res = await getRecommendations(5030);
-
-console.log(res);
