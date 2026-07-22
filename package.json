@@ -8,6 +8,7 @@
     "build": "tsc",
     "dev": "tsx src/app.ts",
     "start": "node dist/src/app.js",
+    "schema": "tsx src/scripts/schema.ts",
     "seed": "tsx db/seed.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

@@ -14,12 +14,14 @@ async function seed() {
 
   await db.query("BEGIN");
   try {
-    await db.query("DELETE FROM usage_events");
-    await db.query("DELETE FROM survey_responses");
-    await db.query("DELETE FROM course_prerequisites");
-    await db.query("DELETE FROM course_skills");
-    await db.query("DELETE FROM courses");
-    await db.query("DELETE FROM users");
+    await db.query(`TRUNCATE TABLE
+      usage_events,
+      survey_responses,
+      course_prerequisites,
+      course_skills,
+      courses,
+      users
+    RESTART IDENTITY CASCADE; `);
 
     const users = generateUsers(1000);
     const courses = generateCourses(200);

@@ -1,9 +1,15 @@
-DROP TABLE IF EXISTS usage_events;
-DROP TABLE IF EXISTS survey_responses;
-DROP TABLE IF EXISTS course_prerequisites;
-DROP TABLE IF EXISTS course_skills;
-DROP TABLE IF EXISTS courses;
-DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS usage_events CASCADE;
+DROP TABLE IF EXISTS survey_responses CASCADE;
+DROP TABLE IF EXISTS course_prerequisites CASCADE;
+DROP TABLE IF EXISTS course_skills CASCADE;
+DROP TABLE IF EXISTS courses CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+
+DROP TYPE IF EXISTS event_category CASCADE;
+DROP TYPE IF EXISTS seniority_level CASCADE;
+
+CREATE TYPE seniority_level AS ENUM ('beginner', 'intermediate', 'advanced');
+CREATE TYPE event_category AS ENUM ('started', 'completed', 'dropped');
 
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
@@ -14,7 +20,6 @@ CREATE TABLE users (
     stated_goal TEXT NOT NULL
 );
 
-CREATE TYPE seniority_level AS ENUM ('beginner', 'intermediate', 'advanced');
 CREATE TABLE courses (
     id SERIAL PRIMARY KEY,
     title TEXT NOT NULL,
@@ -33,7 +38,6 @@ CREATE TABLE course_prerequisites (
     prerequisite_course_id INTEGER REFERENCES courses(id)
 );
 
-CREATE TYPE event_category AS ENUM ('started', 'completed', 'dropped');
 CREATE TABLE usage_events (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id),
