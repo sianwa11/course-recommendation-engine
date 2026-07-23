@@ -183,10 +183,19 @@ export function generateSurveyResponse(userId: number) {
 
 export function generateUsageEvents(userId: number, courseIds: number[]) {
   return courseIds.map((courseId) => {
-    const eventType = faker.helpers.arrayElement([
-      "started",
-      "completed",
-      "dropped",
+    const eventType = faker.helpers.weightedArrayElement([
+      {
+        value: "started",
+        weight: 5,
+      },
+      {
+        value: "completed",
+        weight: 3,
+      },
+      {
+        value: "dropped",
+        weight: 2,
+      },
     ]);
 
     let progress = 0;

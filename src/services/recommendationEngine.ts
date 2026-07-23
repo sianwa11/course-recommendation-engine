@@ -17,6 +17,9 @@ export async function getRecommendations(
   const survey = await getSurveyByUserId(userId);
   const usage = await getUsageByUserId(userId);
   const courses = await getAllCourses();
+  const courseTopicMap = new Map(
+    courses.map((course) => [course.id, course.topic]),
+  );
 
   const recommendations = [];
 
@@ -31,6 +34,7 @@ export async function getRecommendations(
       usage,
       skills,
       coursePrerequisites,
+      courseTopicMap,
     );
     if (recommendation) {
       recommendations.push(recommendation);
@@ -55,6 +59,7 @@ function scoreCourse(
   usage: Usage[],
   skills: string[],
   prerequisites: CoursePrerequisite[],
+  courseTopicMap: Map<number, string>,
 ): Score | null {
   // 1. If the user has already completed the course, do not recommend it.
   const completed = usage.filter(
@@ -99,24 +104,25 @@ function scoreCourse(
     reasonParts.push("Matches user's seniority level");
   }
 
-  const usageEvents = usage.find((u) => u.course_id === course.id);
-  if (usageEvents && usageEvents.event_type === "started") {
-    score += 10;
-    reasonParts.push("course in progress");
-  }
+  const relatedUsage = usage.filter(
+    (u) => courseTopicMap.get(u.course_id) === course.topic,
+  );
 
-  if (usageEvents && usageEvents.event_type === "dropped") {
-    score -= 20;
-    reasonParts.push("course was dropped");
-  }
+  for (const event of relatedUsage) {
+    if (event.event_type === "started") {
+      score += 10;
+      reasonParts.push("Previously started a similar course");
 
-  if (
-    usageEvents &&
-    usageEvents.event_type === "started" &&
-    usageEvents.progress_pct > 60
-  ) {
-    score += 15;
-    reasonParts.push("course in progress with more than 60% completion");
+      if (event.progress_pct > 60) {
+        score += 15;
+        reasonParts.push("High progress in a similar course");
+      }
+    }
+
+    if (event.event_type === "dropped") {
+      score -= 20;
+      reasonParts.push("Previously dropped a similar course");
+    }
   }
 
   if (
@@ -127,7 +133,7 @@ function scoreCourse(
     reasonParts.push("Matches user's goal from survey");
   }
 
-  if (score === null) return null;
+  if (score <= 0) return null;
 
   return {
     course,
