@@ -18,7 +18,8 @@ export const getCourseSkills = async (courseId: number): Promise<string[]> => {
     "SELECT skill FROM course_skills WHERE course_id = $1",
     [courseId],
   );
-  return result.rows;
+
+  return result.rows.map((row) => row.skill);
 };
 
 export type CoursePrerequisite = {

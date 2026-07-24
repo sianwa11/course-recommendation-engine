@@ -6,6 +6,7 @@ const router = Router();
 router.get("/:userId", async (req: Request, res: Response) => {
   try {
     const userId = Number(req.params.userId);
+    const n = req.query.n ? Number(req.query.n) : 5;
 
     if (Number.isNaN(userId)) {
       return res.status(400).json({
@@ -13,7 +14,13 @@ router.get("/:userId", async (req: Request, res: Response) => {
       });
     }
 
-    const courses = await getRecommendations(userId);
+    if (Number.isNaN(n) || n <= 0) {
+      return res.status(400).json({
+        error: "Invalid value for 'n'",
+      });
+    }
+
+    const courses = await getRecommendations(userId, n);
 
     return res.json(courses);
   } catch (error) {

@@ -9,6 +9,25 @@ import {
   CoursePrerequisite,
 } from "../models/courses.js";
 
+const LEVEL_MAP = {
+  Junior: "beginner",
+  Mid: "intermediate",
+  Senior: "advanced",
+};
+
+const ROLE_TOPICS: Record<string, string[]> = {
+  Developer: ["AI", "Cybersecurity", "Data Analysis"],
+  Manager: ["Leadership", "Project Management"],
+  HR: ["HR", "Communication", "Leadership"],
+  Founder: ["Leadership", "Sales", "Financial Planning"],
+};
+
+const INDUSTRY_TOPICS: Record<string, string[]> = {
+  NGO: ["Leadership", "Communication", "Project Management"],
+  Healthcare: ["Leadership", "Communication"],
+  Education: ["Leadership", "AI"],
+};
+
 export async function getRecommendations(
   userId: number,
   limit: number = 5,
@@ -17,11 +36,66 @@ export async function getRecommendations(
   const survey = await getSurveyByUserId(userId);
   const usage = await getUsageByUserId(userId);
   const courses = await getAllCourses();
-  const courseTopicMap = new Map(
+
+  // cold start users
+  if (usage.length === 0) {
+    return getColdStartRecommendations(user, courses);
+  }
+
+  return getCourseRecommendations(courses, user, survey, usage, limit);
+}
+
+function getColdStartRecommendations(
+  user: User,
+  courses: Course[],
+  limit: number = 5,
+) {
+  const recommendations = [];
+  for (const course of courses) {
+    let score = 0;
+    let reasonParts: string[] = [];
+
+    if (course.topic === user.stated_goal) {
+      score += 40;
+      reasonParts.push("Matches user's stated goal");
+    }
+
+    if (ROLE_TOPICS[user.role]?.includes(course.topic)) {
+      score += 30;
+      reasonParts.push("Matches user's role");
+    }
+
+    if (INDUSTRY_TOPICS[user.industry]?.includes(course.topic)) {
+      score += 30;
+      reasonParts.push("Matches user's industry");
+    }
+
+    if (course.level === LEVEL_MAP[user.seniority]) {
+      score += 20;
+      reasonParts.push("Matches user's seniority level");
+    }
+
+    recommendations.push({
+      course,
+      score,
+      reason: reasonParts,
+    });
+  }
+  return recommendations.sort((a, b) => b.score - a.score).slice(0, limit);
+}
+
+async function getCourseRecommendations(
+  courses: Course[],
+  user: User,
+  survey: Survey | null,
+  usage: Usage[],
+  limit: number = 5,
+) {
+  const recommendations = [];
+
+  const courseTopicMap = new Map<number, string>(
     courses.map((course) => [course.id, course.topic]),
   );
-
-  const recommendations = [];
 
   for (const course of courses) {
     const skills = await getCourseSkills(course.id);
@@ -89,17 +163,11 @@ function scoreCourse(
   }
 
   if (survey && survey?.skill_gap && skills.includes(survey.skill_gap)) {
-    score += 30;
+    score += 38;
     reasonParts.push("Addresses skill gap from survey");
   }
 
-  const levelMap = {
-    Junior: "beginner",
-    Mid: "intermediate",
-    Senior: "advanced",
-  };
-
-  if (course.level === levelMap[user.seniority]) {
+  if (course.level === LEVEL_MAP[user.seniority]) {
     score += 20;
     reasonParts.push("Matches user's seniority level");
   }

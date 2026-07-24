@@ -27,7 +27,7 @@ async function seed() {
     const courses = generateCourses(200);
 
     const userIds = [];
-    const courseIds: number[] = [];
+    const insertedCourses = [];
 
     // seed users
     for (const user of users) {
@@ -44,11 +44,14 @@ async function seed() {
         "INSERT INTO courses (title, topic, level, duration_mins) VALUES ($1, $2, $3, $4) RETURNING id",
         [course.title, course.topic, course.level, course.duration],
       );
-      courseIds.push(result.rows[0].id);
+      insertedCourses.push({
+        id: result.rows[0].id,
+        ...course,
+      });
     }
 
     // seed course skills
-    const courseSkills = generateCourseSkills(courses);
+    const courseSkills = generateCourseSkills(insertedCourses);
     for (const courseSkill of courseSkills) {
       await db.query(
         "INSERT INTO course_skills (course_id, skill) VALUES ($1, $2)",
@@ -72,12 +75,14 @@ async function seed() {
     }
 
     // seed usage events for each user and course
-    const userCourses = faker.helpers.arrayElements(
-      courseIds,
-      faker.number.int({ min: 1, max: 15 }),
-    );
+    const courseIds = insertedCourses.map((course) => course.id);
 
     for (const userId of userIds) {
+      const userCourses = faker.helpers.arrayElements(
+        courseIds,
+        faker.number.int({ min: 1, max: 15 }),
+      );
+
       const events = generateUsageEvents(userId, userCourses);
       for (const event of events) {
         await db.query(
@@ -95,16 +100,25 @@ async function seed() {
     }
 
     // generate course prerequisites
-    let coursesCopy = courses.map((course, i) => ({
-      ...course,
-      id: courseIds[i],
-    }));
-    const coursePrerequisites = generateCoursePrerequisites(coursesCopy);
+    const coursePrerequisites = generateCoursePrerequisites(insertedCourses);
     for (const prerequisite of coursePrerequisites) {
       await db.query(
         "INSERT INTO course_prerequisites (course_id, prerequisite_course_id) VALUES ($1, $2)",
         [prerequisite.courseId, prerequisite.prerequisiteCourseId],
       );
+    }
+
+    const coldStartUsers = generateUsers(10);
+    for (const user of coldStartUsers) {
+      const result = await db.query(
+        `INSERT INTO users
+      (role, industry, company_size, seniority, stated_goal)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING id`,
+        [user.role, user.industry, user.companySize, user.seniority, user.goal],
+      );
+
+      console.log("Cold start user:", result.rows[0].id);
     }
 
     console.log("Seeding completed successfully.");
